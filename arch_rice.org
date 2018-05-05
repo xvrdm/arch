@@ -1,0 +1,89 @@
+#+PROPERTY: header-args :tangle yes 
+#+PROPERTY: header-args+ :shebang "#!/bin/bash"
+
+** Basics
+#+BEGIN_SRC bash
+pacman -S base-devel fakeroot --noconfirm --needed 
+pacman -S git wget curl jshon expac --noconfirm --needed
+#+END_SRC
+
+** Terminal
+#+BEGIN_SRC bash
+pacman -S rxvt-unicode --noconfirm --needed
+#+END_SRC
+
+** Packer
+#+BEGIN_SRC bash
+mkdir /tmp/packer
+wget https://aur.archlinux.org/cgit/aur.git/plain/PKGBUILD?h=packer
+mv PKGBUILD\?h\=packer /tmp/packer/PKGBUILD
+cd /tmp/packer
+makepkg -i /tmp/packer --noconfirm
+rm -rf /tmp/packer
+#+END_SRC
+
+** Fonts
+    
+#+BEGIN_SRC bash
+pacman -S ttf-hack --noconfirm --needed
+#+END_SRC
+
+** Window server
+#+BEGIN_SRC bash 
+pacman -S xorg xorg-server xorg-xinit xorg-twm --noconfirm --needed
+pacman -S virtualbox-guest-utils --noconfirm --needed
+#+END_SRC    
+    
+** Window manager
+#+BEGIN_SRC bash
+packer -S i3-gaps-next-git --noconfirm --needed
+#+END_SRC
+
+Make i3 start when we log in =tty1=.
+#+BEGIN_SRC bash
+printf "%s\n" "#! /bin/bash" "exec i3" | tee --append $HOME/.xinitrc
+
+printf "%s\n" "" \
+  "# autostart systemd default session on tty1" \
+  "if [[ \"\$(tty)\" == '/dev/tty1' ]]; then" \
+  "        exec startx" \
+  "fi" | sudo tee --append /etc/profile
+#+END_SRC
+    
+** Window Manager goodies
+#+BEGIN_SRC bash
+pacman -S feh compton --noconfirm --needed
+packer -S polybar-git --noconfirm --needed
+#+END_SRC
+
+** Display Manager (login screen)
+
+#+BEGIN_SRC bash
+pacman -S lightdm lightdm-gtk-greeter --noconfirm --needed
+systemctl enable lightdm.service
+#+END_SRC
+
+** Issues
+*** All character in i3 are just blocks
+    Might be that you have no font installed. Install one with =pacman -S ttf-dejavu=. [[https://www.reddit.com/r/i3wm/comments/7ulp87/i3_does_not_display_any_characters/][Reddit thread]]
+   
+*** Permission error on i3 startx launch
+     Trying to launch i3 with =startx= raises:
+
+#+BEGIN_SRC :exports none
+xf86OpenConsole: Cannot open virtual console 1 (Permission denied)
+#+END_SRC
+     
+    Try to reinstall =xorg-server=. Also see [[https://bbs.archlinux.org/viewtopic.php?id=192329][this comment]]:
+    
+#+BEGIN_QUOTE
+If your logged in as a different user and su to the user starting X. You will get an permission denied as tty1 is occupied by the original user.  In short reboot or completely log out the current user then issue "startx".
+#+END_QUOTE
+     
+*** My problems with font continue
+In Arch you can manually setup the fonts in file =~/.config/fontconfig/fonts.conf=. It's an XML file.
+*** Window server keeps crashing
+Install =xf86-video-intel=.
+*** I'm stuck in i3
+- =Ctrl-Alt-F(2/3/4...)= brings you to another tty.
+- =Alt-(Left/Right)= go from one tty to the next.

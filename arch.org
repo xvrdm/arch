@@ -1,0 +1,304 @@
+* Arch Linux
+** Guides
+
+- [[http://tutos.readthedocs.io/en/latest/source/Arch.html][hnykda Arch install tuto]]
+- [[https://github.com/erikdubois/Archi3/tree/770d15dfc27ef7542ef77f794eed1b6c2e90d87f/installation][Erik Dubois install scripts]]
+- [[https://erikdubois.be/how-to-install-arch-linux/][E Dubois Base Install]] 
+- [[https://erikdubois.be/how-to-install-i3-on-arch-linux/][E Dubois i3 install ]]
+- [[https://www.youtube.com/watch?v%3D-BOW61luzF4][L Smith i3 config Video]]
+- [[https://github.com/PotatoesMaster/i3-vim-syntax][i3-vim-syntax]]
+  
+** Creating a bootable usb
+The output file (i.e =of==) should be the portable disk (not one of its partition).
+
+#+BEGIN_SRC 
+$ dd if=/Download/arch_linux.iso of=/dev/sdb status="progress"
+#+END_SRC
+
+** UEFI
+Do you need UEFI? Check if =/sys/firmware/efi/efivars= exists. If it does, you need it.
+
+Keep in mind that under MBR, only 4 partitions are allowed. So utils like =fdisk= will default to an =extended= type for your 4th partition rather than =primary=. More here https://unix.stackexchange.com/questions/7677/what-is-the-difference-between-extended-partition-and-logical-partition 
+
+** Keyboard settings
+https://wiki.archlinux.org/index.php/Keyboard_configuration_in_console
+
+See which keyboard / language are active with =$ localectl=.
+
+Keyboard layouts can be found in =/usr/share/kbd/keymaps/=. But they don't seem to be installed on the usb drive: =$ localectl list-keymaps= yields nothing.
+
+https://wiki.manjaro.org/index.php?title=Configuration_du_clavier_apr%C3%A8s_l%27installation
+
+Using =$ loadkeys= is another option. The clavier is recognized but note that it does not change the value of =$ localectl=.
+
+#+BEGIN_SRC bash
+# changement temporaire
+loadkeys fr_CH-latin1
+# changement permanent
+echo "KEYMAP=fr_CH-latin1" >> /etc/vconsole.conf
+#+END_SRC
+   
+** Sync your clock
+Check if =System clock= is synchronized with network with =$ timedatectl status=.
+
+Activate =systemd-timesyncd.service= to synchronize with network.
+
+#+BEGIN_SRC bash
+timedatectl set-ntp true
+#+END_SRC
+
+Set up timezone. You can find the list of timezones with =$ timedatectl list-timezones=.
+
+#+BEGIN_SRC bash
+timedatectl set-timezone Europe/Zurich
+#+END_SRC
+
+** Disk Partition
+#+BEGIN_SRC :exports none
+$ lsblk
+  NAME  MAJ:MIN  RM   SIZE  TYPE  MOUNTPOINT
+  loop0   7:0     0 446.8M  loop  /run/archiso/sfs/airootfs
+  sda     8:0     0    20G  disk
+  sr0    11:0     0   556M   rom  /run/archiso/bootmnt
+#+END_SRC
+   
+At this stage the disk =sda= has no "Partition Table". But this will be created automatically with our first partition.
+
+#+BEGIN_SRC :exports none
+$ parted
+  (parted) print
+  ...
+  Partition Table: unknown
+  ...
+
+$ fdisk -l
+#+END_SRC
+
+If you do have a Partition Table and existing partitions, you can delete them with =$ fdisk=.
+
+#+BEGIN_SRC :exports none
+$ fdisk /dev/sda
+  (fdisk) p # check existing partitions
+  (fdisk) d # delete existing partition
+#+END_SRC
+
+| Partition | Size          | Function     | FS |
+|-----------+---------------+--------------+----|
+| Boot      | 200M          | GRUB...      | T  |
+| SWAP      | 150% of RAM   | Hibernate    | F  |
+| Root      | ~25G          | All programs | T  |
+| Home      | Rest of space | Your stuff   | T  |
+
+#+BEGIN_SRC :exports none
+$ fdisk /dev/sda
+  (fdisk) n # create new partition
+          p # primary partition (4th partition might default to extended) 
+          1 # partition number
+          default # first sector
+          +200M # Last sector 
+  Created a new partition 1 of type 'Linux' and of size 200 MiB.
+  ...
+  Repeat for each partition
+  ...
+  (fdisk) w
+  Partition table has been altered.
+  Calling ioctl() to re-read partition table.
+  Syncing disk.
+
+$ lsblk
+  NAME  MAJ:MIN  RM   SIZE  RO  TYPE  MOUNTPOINT
+  loop0   7:0     0 446.8M   1  loop  /run/archiso/sfs/airootfs
+  sda     8:0     0    20G   0  disk
+  --sda1  8:1     0    20G   0  part
+  sr0    11:0     1   556M   0  rom   /run/archiso/bootmnt
+#+END_SRC
+
+*** Convert partitions to file system
+
+This step is not necessary for the =SWAP= partition.
+
+#+BEGIN_SRC :exports none
+$ mkfs.ext4 /dev/sda1
+$ mkfs.ext4 /dev/sda3
+$ mkfs.ext4 /dev/sda4
+#+END_SRC
+
+*** Convert partitions to swap partition
+
+This step is only necessary for the =SWAP= partition.
+
+#+BEGIN_SRC :exports none
+$ mkswap /dev/sda2
+$ swapon /dev/sda2 # now marked as SWAP in lsblk
+#+END_SRC
+
+*** Mount the partitions 
+
+We need to mount partitions so that we can modify them. You can check if the disks are already mounted with =$ lsblk=, under the =MOUNTPOINT= column.
+
+Mount root partition on =/mnt=.
+
+#+BEGIN_SRC 
+$ mount /dev/sda3 /mnt
+#+END_SRC
+
+Mount boot partition on =/mnt/boot= (create dir first).
+
+#+BEGIN_SRC 
+$ mkdir /mnt/boot
+$ mount /dev/sda1 /mnt/boot
+#+END_SRC
+
+Mount home partition on =/mnt/home= (create dir first).
+
+#+BEGIN_SRC 
+$ mkdir /mnt/home
+$ mount /dev/sda4 /mnt/home
+#+END_SRC
+
+** Install ArchLinux
+   
+#+BEGIN_SRC bash
+$ pacstrap /mnt base base-devel grub \
+                networkmanager git \
+                curl wget vim
+#+END_SRC
+
+*** Automate mounts
+To make these mounts automatically happen at startup, we need a =/etc/fstab= file. Rather than writing the =fstab= file, we can generate it with =$ genfstab=. The =-U= flag makes use of the =UUID= of the partition rather than their names (e.g =/dev/sda1=), which could change in the future.
+
+#+BEGIN_SRC 
+$ genfstab -U /mnt >> /mnt/etc/fstab
+#+END_SRC
+
+*Make sure to delete the entries that might be related to the host system!!*
+
+*** Make the boot partition bootable
+
+#+BEGIN_SRC 
+$ arch-chroot /mnt
+#+END_SRC
+    
+Doesn't look like much but the prompt changed and you are now in the disk! Not the ISO!
+
+    
+***  Boot loader
+
+Install GRUB
+
+#+BEGIN_SRC 
+$ pacman -S grub --noconfirm --needed
+#+END_SRC
+
+Install and generate GRUB config. Note that we target the disk, not a partition.
+
+#+BEGIN_SRC 
+$ grub-install --target=i386-pc /dev/sda
+$ grub-mkconfig -o /boot/grub/grub.cfg
+#+END_SRC
+
+*** Network manager
+
+Install NetworkManager
+
+#+BEGIN_SRC bash
+pacman -S networkmanager --noconfirm --needed
+#+END_SRC
+    
+Launch NetworkManager at login
+
+#+BEGIN_SRC 
+systemctl enable NetworkManager
+#+END_SRC
+
+*** Session
+
+Set a root password
+
+#+BEGIN_SRC 
+passwd
+#+END_SRC
+
+*** Locale
+#+BEGIN_SRC bash
+echo "----Clavier pour session en cours----"
+loadkeys fr_CH-latin1
+
+echo "----Clavier pour sessions futures----"
+echo "KEYMAP=fr_CH-latin1" >> /etc/vconsole.conf
+#+END_SRC
+    
+Uncomment your language(s) in =/etc/locale.gen= and regenerate local.
+
+#+BEGIN_SRC 
+vim /etc/locale.gen
+locale-gen
+#+END_SRC
+
+Create a =locale.conf= file and define the =LANG= variable in it.    
+
+#+BEGIN_SRC 
+echo "LANG=en_US.UTF-8" >> /etc/locale.conf
+#+END_SRC
+
+Link =/etc/= to the correct time zone in =/usr/share/zoneinfo/=.
+
+#+BEGIN_SRC 
+ln -sf /usr/share/zoneinfo/Europe/Zurich /etc/localtime
+#+END_SRC
+
+*** Name computer
+
+#+BEGIN_SRC 
+$ echo "archvm" >> /etc/hostname
+#+END_SRC
+    
+*** Exit back to ISO and unmount
+
+#+BEGIN_SRC 
+$ exit
+$ umount -R /mnt
+#+END_SRC
+
+You can finally reboot the system.
+
+#+BEGIN_SRC 
+$ reboot
+#+END_SRC
+
+** Configure Arch
+
+*** Create sudo user
+Create a =sudoers= group.
+
+#+BEGIN_SRC 
+groupadd sudoers
+#+END_SRC
+
+Give =sudoers= group the power of =sudo=. Using the =visudo= command, you can edit a file =/etc/sudoers.tmp=.
+
+#+BEGIN_SRC 
+visudo
+# Add/Uncomment a line "%<groupname> ALL=(ALL) ALL"
+# In our case "%sudoers ALL=(ALL) ALL"
+#+END_SRC
+
+Create a user.
+
+#+BEGIN_SRC 
+useradd -m xav && passwd xav
+#+END_SRC
+
+Add (i.e append =-a=) user to group (i.e =-G=) =sudoers=.
+    
+#+BEGIN_SRC 
+usermod -a -G sudoers xav
+# or gpasswd -a xav sudoers
+#+END_SRC
+
+See list of users in a group.
+
+#+BEGIN_SRC 
+grep sudoers /etc/group
+#+END_SRC
+ 
