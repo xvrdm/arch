@@ -1,9 +1,9 @@
 #!/bin/bash
 
-pacman -S base-devel fakeroot --noconfirm --needed 
-pacman -S git wget curl jshon expac --noconfirm --needed
+sudo pacman -S base-devel fakeroot --noconfirm --needed 
+sudo pacman -S git wget curl jshon expac --noconfirm --needed
 
-pacman -S rxvt-unicode --noconfirm --needed
+sudo pacman -S rxvt-unicode --noconfirm --needed
 
 mkdir /tmp/packer
 wget https://aur.archlinux.org/cgit/aur.git/plain/PKGBUILD?h=packer
@@ -12,10 +12,10 @@ cd /tmp/packer
 makepkg -i /tmp/packer --noconfirm
 rm -rf /tmp/packer
 
-pacman -S ttf-hack --noconfirm --needed
+sudo pacman -S ttf-hack --noconfirm --needed
 
-pacman -S xorg xorg-server xorg-xinit xorg-twm --noconfirm --needed
-pacman -S virtualbox-guest-utils --noconfirm --needed
+sudo pacman -S xorg xorg-server xorg-xinit xorg-twm --noconfirm --needed
+sudo pacman -S virtualbox-guest-utils --noconfirm --needed
 
 packer -S i3-gaps-next-git --noconfirm --needed
 
@@ -27,8 +27,8 @@ printf "%s\n" "" \
   "        exec startx" \
   "fi" | sudo tee --append /etc/profile
 
-pacman -S feh compton --noconfirm --needed
+sudo pacman -S feh compton --noconfirm --needed
 packer -S polybar-git --noconfirm --needed
 
-pacman -S lightdm lightdm-gtk-greeter --noconfirm --needed
-systemctl enable lightdm.service
+sudo pacman -S lightdm lightdm-gtk-greeter --noconfirm --needed
+sudo systemctl enable lightdm.service

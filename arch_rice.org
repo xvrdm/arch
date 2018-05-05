@@ -3,13 +3,13 @@
 
 ** Basics
 #+BEGIN_SRC bash
-pacman -S base-devel fakeroot --noconfirm --needed 
-pacman -S git wget curl jshon expac --noconfirm --needed
+sudo pacman -S base-devel fakeroot --noconfirm --needed 
+sudo pacman -S git wget curl jshon expac --noconfirm --needed
 #+END_SRC
 
 ** Terminal
 #+BEGIN_SRC bash
-pacman -S rxvt-unicode --noconfirm --needed
+sudo pacman -S rxvt-unicode --noconfirm --needed
 #+END_SRC
 
 ** Packer
@@ -25,13 +25,13 @@ rm -rf /tmp/packer
 ** Fonts
     
 #+BEGIN_SRC bash
-pacman -S ttf-hack --noconfirm --needed
+sudo pacman -S ttf-hack --noconfirm --needed
 #+END_SRC
 
 ** Window server
 #+BEGIN_SRC bash 
-pacman -S xorg xorg-server xorg-xinit xorg-twm --noconfirm --needed
-pacman -S virtualbox-guest-utils --noconfirm --needed
+sudo pacman -S xorg xorg-server xorg-xinit xorg-twm --noconfirm --needed
+sudo pacman -S virtualbox-guest-utils --noconfirm --needed
 #+END_SRC    
     
 ** Window manager
@@ -52,15 +52,15 @@ printf "%s\n" "" \
     
 ** Window Manager goodies
 #+BEGIN_SRC bash
-pacman -S feh compton --noconfirm --needed
+sudo pacman -S feh compton --noconfirm --needed
 packer -S polybar-git --noconfirm --needed
 #+END_SRC
 
 ** Display Manager (login screen)
 
 #+BEGIN_SRC bash
-pacman -S lightdm lightdm-gtk-greeter --noconfirm --needed
-systemctl enable lightdm.service
+sudo pacman -S lightdm lightdm-gtk-greeter --noconfirm --needed
+sudo systemctl enable lightdm.service
 #+END_SRC
 
 ** Issues
