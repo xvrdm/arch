@@ -1,7 +1,11 @@
 #+PROPERTY: header-args :tangle yes 
 #+PROPERTY: header-args+ :shebang "#!/bin/bash"
 
-** Basics
+** Update all packages
+#+BEGIN_SRC bash
+sudo pacman -Syu --noconfirm
+#+END_SRC
+** Basic packages
 #+BEGIN_SRC bash
 sudo pacman -S base-devel fakeroot --noconfirm --needed 
 sudo pacman -S git wget curl jshon expac --noconfirm --needed

@@ -1,5 +1,7 @@
 #!/bin/bash
 
+sudo pacman -Syu --noconfirm
+
 sudo pacman -S base-devel fakeroot --noconfirm --needed 
 sudo pacman -S git wget curl jshon expac --noconfirm --needed
 
