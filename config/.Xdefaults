@@ -1,0 +1,5 @@
+#include "nord"
+URxvt.font:			xft.monospace:size=11
+URxvt.scrollBar:		false
+URxvt.resize-font.smaller:	C-j
+URxvt.resize-font.larger:	C-k

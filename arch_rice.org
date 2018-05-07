@@ -39,6 +39,7 @@ sudo pacman -S virtualbox-guest-utils --noconfirm --needed
 #+END_SRC    
     
 ** Window manager
+Install the "gaps" version of i3.
 #+BEGIN_SRC bash
 packer -S i3-gaps-next-git --noconfirm
 #+END_SRC
@@ -81,7 +82,7 @@ xf86OpenConsole: Cannot open virtual console 1 (Permission denied)
     Try to reinstall =xorg-server=. Also see [[https://bbs.archlinux.org/viewtopic.php?id=192329][this comment]]:
     
 #+BEGIN_QUOTE
-If your logged in as a different user and su to the user starting X. You will get an permission denied as tty1 is occupied by the original user.  In short reboot or completely log out the current user then issue "startx".
+If you're logged in as a different user and su to the user starting X. You will get an permission denied as tty1 is occupied by the original user.  In short reboot or completely log out the current user then issue "startx".
 #+END_QUOTE
      
 *** My problems with font continue
