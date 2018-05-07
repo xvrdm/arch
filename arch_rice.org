@@ -40,7 +40,7 @@ sudo pacman -S virtualbox-guest-utils --noconfirm --needed
     
 ** Window manager
 #+BEGIN_SRC bash
-packer -S i3-gaps-next-git --noconfirm --needed
+packer -S i3-gaps-next-git --noconfirm
 #+END_SRC
 
 Make i3 start when we log in =tty1=.
@@ -57,7 +57,7 @@ printf "%s\n" "" \
 ** Window Manager goodies
 #+BEGIN_SRC bash
 sudo pacman -S feh compton --noconfirm --needed
-packer -S polybar-git --noconfirm --needed
+packer -S polybar-git --noconfirm
 #+END_SRC
 
 ** Display Manager (login screen)

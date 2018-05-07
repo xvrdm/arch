@@ -19,7 +19,7 @@ sudo pacman -S ttf-hack --noconfirm --needed
 sudo pacman -S xorg xorg-server xorg-xinit xorg-twm --noconfirm --needed
 sudo pacman -S virtualbox-guest-utils --noconfirm --needed
 
-packer -S i3-gaps-next-git --noconfirm --needed
+packer -S i3-gaps-next-git --noconfirm
 
 printf "%s\n" "#! /bin/bash" "exec i3" | tee --append $HOME/.xinitrc
 
@@ -30,7 +30,7 @@ printf "%s\n" "" \
   "fi" | sudo tee --append /etc/profile
 
 sudo pacman -S feh compton --noconfirm --needed
-packer -S polybar-git --noconfirm --needed
+packer -S polybar-git --noconfirm
 
 sudo pacman -S lightdm lightdm-gtk-greeter --noconfirm --needed
 sudo systemctl enable lightdm.service
